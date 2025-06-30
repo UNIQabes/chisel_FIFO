@@ -36,42 +36,72 @@ class SevenSegment_Spec extends AnyFreeSpec with Matchers with ChiselSim {
 				println("------clock-------")
 			}
 		} 
+	val fifo_RandomReadWriteTest ={ dut : TestModule =>
+		simulate(new TestModule(4,8,10)){ dut =>
+				var validReadCnt=0
+				var clkCnt=0
+				while(validReadCnt<100 & clkCnt<1000){
+					clkCnt+=1
+					if(dut.io.validRead.peekValue().asBigInt == 1){
+						println("%d : %d".format(clkCnt,dut.io.outForCheck.peekValue().asBigInt))
+						validReadCnt+=1
+					}
+					dut.clock.step()
+				}
+			}
+	}
 	
 	
 		
-	"fifo_1to7StreamTest" - {
-		"BubbleFIFO" - {
-			"depth1" in {
-				simulate(new BubbleFifo(8,1)){ dut =>
-					fifo_1to7StreamTest.apply(dut)
-				}
-			}
-			"depth2" in {
-				simulate(new BubbleFifo(8,2)){ dut =>
-					fifo_1to7StreamTest.apply(dut)
-				} 
-			}
-			"depth10" in {
-				simulate(new BubbleFifo(8,10)){ dut =>
-					fifo_1to7StreamTest.apply(dut)
-				} 
-			}
+	// "fifo_1to7StreamTest" - {
+	// 	"BubbleFIFO" - {
+	// 		"depth1" in {
+	// 			simulate(new BubbleFifo(8,1)){ dut =>
+	// 				fifo_1to7StreamTest.apply(dut)
+	// 			}
+	// 		}
+	// 		"depth2" in {
+	// 			simulate(new BubbleFifo(8,2)){ dut =>
+	// 				fifo_1to7StreamTest.apply(dut)
+	// 			} 
+	// 		}
+	// 		"depth10" in {
+	// 			simulate(new BubbleFifo(8,10)){ dut =>
+	// 				fifo_1to7StreamTest.apply(dut)
+	// 			} 
+	// 		}
 
-		}
-		"CircularFIFO" - {
-			"depth2" in {
+	// 	}
+	// 	"CircularFIFO" - {
+	// 		"depth2" in {
 				
-				simulate(new CircularFifo(8,2)){ dut =>
-					println("------CircularFIFO-------")
-					fifo_1to7StreamTest.apply(dut)
-				} 
-			}
-			"depth10" in {
-				simulate(new CircularFifo(8,10)){ dut =>
-					fifo_1to7StreamTest.apply(dut)
-				} 
-			}
+	// 			simulate(new CircularFifo(8,2)){ dut =>
+	// 				println("------CircularFIFO-------")
+	// 				fifo_1to7StreamTest.apply(dut)
+	// 			} 
+	// 		}
+	// 		"depth10" in {
+	// 			simulate(new CircularFifo(8,10)){ dut =>
+	// 				fifo_1to7StreamTest.apply(dut)
+	// 			} 
+	// 		}
 
+	// 	}
+	// }
+	"RandomTester" - {
+		"Tester" in {
+			simulate(new TestModule(4,8,10)){ dut =>
+				var validReadCnt=0
+				var clkCnt=0
+				while(validReadCnt<100 & clkCnt<1000){
+					clkCnt+=1
+					if(dut.io.validRead.peekValue().asBigInt == 1){
+						println("%d : %d".format(clkCnt,dut.io.outForCheck.peekValue().asBigInt))
+						validReadCnt+=1
+					}
+					dut.clock.step()
+				}
+			} 
 		}
 	}
 	

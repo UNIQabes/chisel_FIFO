@@ -15,6 +15,18 @@ class ReaderIO(size: Int) extends Bundle {
   val dout = Output(UInt(size.W))
 }
 
+class WriterIO_OnWriter(size: Int) extends Bundle {
+  val write = Output(Bool())
+  val full = Input(Bool())
+  val din = Output(UInt(size.W))
+}
+
+class ReaderIO_OnReader(size: Int) extends Bundle {
+  val read = Output(Bool())
+  val empty = Input(Bool())
+  val dout = Input(UInt(size.W))
+}
+
 abstract  class FIFO_Base(size: Int) extends Module {
   val io = IO(new Bundle {
     val enq = new WriterIO(size)
@@ -72,4 +84,5 @@ class BubbleFifo(size: Int, depth: Int) extends FIFO_Base(size) {
 object mainObj extends App {
 	ChiselStage.emitSystemVerilogFile(new BubbleFifo(8,1), firtoolOpts = Array("-strip-debug-info", "--disable-all-randomization","-default-layer-specialization=enable"))
 	ChiselStage.emitSystemVerilogFile(new CircularFifo (8,4), firtoolOpts = Array("-strip-debug-info", "--disable-all-randomization","-default-layer-specialization=enable"))
+	ChiselStage.emitSystemVerilogFile(new TestModule (4,2,58), firtoolOpts = Array("-strip-debug-info", "--disable-all-randomization","-default-layer-specialization=enable"))
 }
