@@ -12,6 +12,14 @@ import  chisel3._
 import circt.stage.ChiselStage
 import chisel3.util
 
+abstract class Writer(size:Int) extends Module{
+	val io=IO(new Bundle{
+		val write = Output(Bool())
+		val full = Input(Bool())
+		val din = Output(UInt(size.W))
+	})
+}
+
 class RandomWriter(cycle:Int) extends Module{
 	val size=8
 	val io=IO(new Bundle{

@@ -37,18 +37,16 @@ class SevenSegment_Spec extends AnyFreeSpec with Matchers with ChiselSim {
 			}
 		} 
 	val fifo_RandomReadWriteTest ={ dut : TestModule =>
-		simulate(new TestModule(4,8,10)){ dut =>
-				var validReadCnt=0
-				var clkCnt=0
-				while(validReadCnt<100 & clkCnt<1000){
-					clkCnt+=1
-					if(dut.io.validRead.peekValue().asBigInt == 1){
-						println("%d : %d".format(clkCnt,dut.io.outForCheck.peekValue().asBigInt))
-						validReadCnt+=1
-					}
-					dut.clock.step()
-				}
+		var validReadCnt=0
+		var clkCnt=0
+		while(validReadCnt<100 & clkCnt<1000){
+			clkCnt+=1
+			if(dut.io.validRead.peekValue().asBigInt == 1){
+				println("%d : %d".format(clkCnt,dut.io.outForCheck.peekValue().asBigInt))
+				validReadCnt+=1
 			}
+			dut.clock.step()
+		}	
 	}
 	
 	
@@ -89,20 +87,28 @@ class SevenSegment_Spec extends AnyFreeSpec with Matchers with ChiselSim {
 	// 	}
 	// }
 	"RandomTester" - {
-		"Tester" in {
-			simulate(new TestModule(4,8,10)){ dut =>
-				var validReadCnt=0
-				var clkCnt=0
-				while(validReadCnt<100 & clkCnt<1000){
-					clkCnt+=1
-					if(dut.io.validRead.peekValue().asBigInt == 1){
-						println("%d : %d".format(clkCnt,dut.io.outForCheck.peekValue().asBigInt))
-						validReadCnt+=1
-					}
-					dut.clock.step()
-				}
+		"SameWrite : SameRead" in {
+			simulate(new TestModule(4,4,10)){ dut =>
+				println("4:4")
+				fifo_RandomReadWriteTest.apply(dut)
+				println("Fin")
 			} 
 		}
+		"SlowWrite : FastWrite" in {
+			simulate(new TestModule(8,4,10)){ dut =>
+				println("8:4")
+				fifo_RandomReadWriteTest.apply(dut)
+				println("Fin")
+			} 
+		}
+		"FastWrite : SlowRead" in {
+			simulate(new TestModule(4,8,10)){ dut =>
+				println("4:8")
+				fifo_RandomReadWriteTest.apply(dut)
+				println("Fin")
+			} 
+		}
+
 	}
 	
 }
