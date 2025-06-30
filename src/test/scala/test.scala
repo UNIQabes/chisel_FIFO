@@ -36,7 +36,7 @@ class SevenSegment_Spec extends AnyFreeSpec with Matchers with ChiselSim {
 				println("------clock-------")
 			}
 		} 
-	val fifo_RandomReadWriteTest ={ dut : TestModule =>
+	val fifo_RandomReadWriteTest ={ dut : ReaderOut =>
 		var validReadCnt=0
 		var clkCnt=0
 		while(validReadCnt<100 & clkCnt<1000){
@@ -51,41 +51,45 @@ class SevenSegment_Spec extends AnyFreeSpec with Matchers with ChiselSim {
 	
 	
 		
-	// "fifo_1to7StreamTest" - {
-	// 	"BubbleFIFO" - {
-	// 		"depth1" in {
-	// 			simulate(new BubbleFifo(8,1)){ dut =>
-	// 				fifo_1to7StreamTest.apply(dut)
-	// 			}
-	// 		}
-	// 		"depth2" in {
-	// 			simulate(new BubbleFifo(8,2)){ dut =>
-	// 				fifo_1to7StreamTest.apply(dut)
-	// 			} 
-	// 		}
-	// 		"depth10" in {
-	// 			simulate(new BubbleFifo(8,10)){ dut =>
-	// 				fifo_1to7StreamTest.apply(dut)
-	// 			} 
-	// 		}
+	"fifo_1to7StreamTest" - {
+		"BubbleFIFO" - {
+			"depth1" in {
+				simulate(new BubbleFifo(8,1)){ dut =>
+					fifo_1to7StreamTest.apply(dut)
+				}
+			}
+			"depth2" in {
+				simulate(new BubbleFifo(8,2)){ dut =>
+					fifo_1to7StreamTest.apply(dut)
+				} 
+			}
+			"depth10" in {
+				simulate(new BubbleFifo(8,10)){ dut =>
+					fifo_1to7StreamTest.apply(dut)
+				} 
+			}
 
-	// 	}
-	// 	"CircularFIFO" - {
-	// 		"depth2" in {
+		}
+		"CircularFIFO" - {
+			"depth2" in {
 				
-	// 			simulate(new CircularFifo(8,2)){ dut =>
-	// 				println("------CircularFIFO-------")
-	// 				fifo_1to7StreamTest.apply(dut)
-	// 			} 
-	// 		}
-	// 		"depth10" in {
-	// 			simulate(new CircularFifo(8,10)){ dut =>
-	// 				fifo_1to7StreamTest.apply(dut)
-	// 			} 
-	// 		}
+				simulate(new CircularFifo(8,2)){ dut =>
+					println("------CircularFIFO-------")
+					fifo_1to7StreamTest.apply(dut)
+				} 
+			}
+			"depth10" in {
+				simulate(new CircularFifo(8,10)){ dut =>
+					fifo_1to7StreamTest.apply(dut)
+				} 
+			}
 
-	// 	}
-	// }
+		}
+	}
+
+
+
+
 	"RandomTester" - {
 		"SameWrite : SameRead" in {
 			simulate(new TestModule(4,4,10)){ dut =>
@@ -109,6 +113,26 @@ class SevenSegment_Spec extends AnyFreeSpec with Matchers with ChiselSim {
 			} 
 		}
 
+	}
+
+
+
+
+	"PeriodicRandomCombination" - {
+		"PeriodicWrite : RandomRead" in {
+			simulate(new Test_PR_Module(100,4,128)){ dut =>
+				println("4:4")
+				fifo_RandomReadWriteTest.apply(dut)
+				println("Fin")
+			} 
+		}
+		"RandomWrite : PeriodicRead" in {
+			simulate(new Test_RP_Module(4,100,128)){ dut =>
+				println("8:4")
+				fifo_RandomReadWriteTest.apply(dut)
+				println("Fin")
+			} 
+		}
 	}
 	
 }

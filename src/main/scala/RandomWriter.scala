@@ -20,13 +20,8 @@ abstract class Writer(size:Int) extends Module{
 	})
 }
 
-class RandomWriter(cycle:Int) extends Module{
+class RandomWriter(cycle:Int) extends Writer(8){
 	val size=8
-	val io=IO(new Bundle{
-		val write = Output(Bool())
-		val full = Input(Bool())
-		val din = Output(UInt(size.W))
-	})
 	val pseudoRandomNumber = util.random.LFSR(size) 
 	val cyclecnt=RegInit(0.U(util.log2Ceil(cycle+1).W))
 	val cnt=RegInit(0.U(size.W))

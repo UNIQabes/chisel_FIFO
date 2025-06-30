@@ -6,17 +6,14 @@ import chisel3.util
 
 
 
-class RandomReader(cycle:Int) extends Module{
+class PeriodicReader(cycle:Int,burstLen:Int) extends Module{
 	val size=8
 	val io=IO(new Bundle{
 		val deq = new ReaderIO_OnReader(size)
-
 		val outForCheck=Output(UInt(size.W))
 		val validRead = Output(Bool())
 	})
-	val pseudoRandomNumber = util.random.LFSR(util.log2Ceil(cycle+1))
-	val readTiming = RegInit(0.U(util.log2Ceil(cycle+1).W))
-	val cyclecnt=RegInit(0.U(util.log2Ceil(cycle+1).W))
+	val cyclecnt = RegInit(0.U(util.log2Ceil(cycle+1).W))
 	
 
 	val outForCheck_Reg = RegInit(0.U(size.W))
@@ -27,7 +24,6 @@ class RandomReader(cycle:Int) extends Module{
 	//デフォルトの動作
 	when(cyclecnt===0.U){
 		cyclecnt:=(cycle-1).U
-		readTiming := (pseudoRandomNumber % cycle.U)
 	}.otherwise{
 		cyclecnt:=cyclecnt-1.U
 	}
@@ -37,7 +33,7 @@ class RandomReader(cycle:Int) extends Module{
 	validRead_Reg := false.B
 	//when(cyclecnt === (pseudoRandomNumber % cycle.U)){
 	//when(readTiming === (pseudoRandomNumber % cycle.U)){
-	when(readTiming === cyclecnt){
+	when(cyclecnt < burstLen.U){
 		io.deq.read:=true.B
 		when(io.deq.empty){
 			cyclecnt := cyclecnt
