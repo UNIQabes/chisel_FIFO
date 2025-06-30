@@ -15,14 +15,18 @@ class ReaderIO(size: Int) extends Bundle {
   val dout = Output(UInt(size.W))
 }
 
-/**
- * A single register (=stage) to build the FIFO.
- */
-class FifoRegister(size: Int) extends Module {
+abstract  class FIFO_Base(size: Int) extends Module {
   val io = IO(new Bundle {
     val enq = new WriterIO(size)
     val deq = new ReaderIO(size)
   })
+}
+
+/**
+ * A single register (=stage) to build the FIFO.
+ */
+class FifoRegister(size: Int) extends FIFO_Base(size) {
+
 
   val empty :: full :: Nil = Enum(2)
   val stateReg = RegInit(empty)
@@ -49,11 +53,8 @@ class FifoRegister(size: Int) extends Module {
 /**
  * This is a bubble FIFO.
  */
-class BubbleFifo(size: Int, depth: Int) extends Module {
-  val io = IO(new Bundle {
-    val enq = new WriterIO(size)
-    val deq = new ReaderIO(size)
-  })
+class BubbleFifo(size: Int, depth: Int) extends FIFO_Base(size) {
+
 
   val buffers = Array.fill(depth) { Module(new FifoRegister(size)) }
   for (i <- 0 until depth - 1) {

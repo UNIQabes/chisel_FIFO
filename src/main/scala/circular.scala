@@ -28,11 +28,8 @@ import chisel3.util._
  * A single register (=stage) to build the FIFO.
  */
 
-class CircularFifo(size: Int, depth: Int) extends Module {
-  val io = IO(new Bundle {
-    val enq = new WriterIO(size)
-    val deq = new ReaderIO(size)
-  })
+class CircularFifo(size: Int, depth: Int) extends FIFO_Base(size) {
+  
   val empty :: full :: mid :: Nil = Enum(3)
 
   
