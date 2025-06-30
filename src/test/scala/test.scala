@@ -121,14 +121,14 @@ class SevenSegment_Spec extends AnyFreeSpec with Matchers with ChiselSim {
 	"PeriodicRandomCombination" - {
 		"PeriodicWrite : RandomRead" in {
 			simulate(new Test_PR_Module(100,4,128)){ dut =>
-				println("4:4")
+				println("P:R")
 				fifo_RandomReadWriteTest.apply(dut)
 				println("Fin")
 			} 
 		}
 		"RandomWrite : PeriodicRead" in {
 			simulate(new Test_RP_Module(4,100,128)){ dut =>
-				println("8:4")
+				println("R:P")
 				fifo_RandomReadWriteTest.apply(dut)
 				println("Fin")
 			} 
