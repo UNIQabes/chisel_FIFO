@@ -1,0 +1,9 @@
+/.bloop
+/.bsp
+/.metals
+/.vscode
+/build
+/project
+/target
+*.sv
+*.f
