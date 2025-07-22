@@ -16,6 +16,7 @@ class TestModule(writeCycle:Int,readCycle:Int,bufferSize:Int) extends ReaderOut(
 	val writer = Module(new RandomWriter(writeCycle))
 	val reader =  Module(new RandomReader(readCycle))
 	val fifo= Module(new CircularFifo(size,bufferSize))
+	
 	writer.io<>fifo.io.enq
 	fifo.io.deq<>reader.io.deq
 	io.outForCheck := reader.io.outForCheck

@@ -85,4 +85,5 @@ object mainObj extends App {
 	ChiselStage.emitSystemVerilogFile(new BubbleFifo(8,1), firtoolOpts = Array("-strip-debug-info", "--disable-all-randomization","-default-layer-specialization=enable"))
 	ChiselStage.emitSystemVerilogFile(new CircularFifo (8,4), firtoolOpts = Array("-strip-debug-info", "--disable-all-randomization","-default-layer-specialization=enable"))
 	ChiselStage.emitSystemVerilogFile(new TestModule (4,2,58), firtoolOpts = Array("-strip-debug-info", "--disable-all-randomization","-default-layer-specialization=enable"))
+	ChiselStage.emitSystemVerilogFile(new CircularFIFO_LooseIn_LooseOut (32,20), firtoolOpts = Array("-strip-debug-info", "--disable-all-randomization","-default-layer-specialization=enable"))
 }

@@ -1,32 +1,10 @@
-/*
- * Author: Martin Schoeberl (martin@jopdesign.com)
- *
- * Play with FIFO buffers.
- *
- */
+
 
 
 import chisel3._
 import chisel3.util._
 
-/*
- * On signal naming:
- * 
- * Alter's FIFO component:
- * 
- * data - data in, q - data out, wrreq and rdreq
- * state: full and empty
- * 
- * Xilinx's FIFO component:
- * din and dout, wr_en, rd_en
- * state: full and empty
- * 
- */
 
-
-/**
- * A single register (=stage) to build the FIFO.
- */
 
 class CircularFifo(size: Int, depth: Int) extends FIFO_Base(size) {
   
@@ -73,6 +51,5 @@ class CircularFifo(size: Int, depth: Int) extends FIFO_Base(size) {
   .elsewhen(isPushed || isPopping){
 	state:=mid
   }
-  
-
 }
+
