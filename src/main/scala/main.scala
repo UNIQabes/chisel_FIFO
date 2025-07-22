@@ -1,89 +1,51 @@
 import chisel3._
-import circt.stage.ChiselStage
-import chisel3.util._
-
-
-class WriterIO(size: Int) extends Bundle {
-  val write = Input(Bool())
-  val full = Output(Bool())
-  val din = Input(UInt(size.W))
-}
-
-class ReaderIO(size: Int) extends Bundle {
-  val read = Input(Bool())
-  val empty = Output(Bool())
-  val dout = Output(UInt(size.W))
-}
-
-class WriterIO_OnWriter(size: Int) extends Bundle {
-  val write = Output(Bool())
-  val full = Input(Bool())
-  val din = Output(UInt(size.W))
-}
-
-class ReaderIO_OnReader(size: Int) extends Bundle {
-  val read = Output(Bool())
-  val empty = Input(Bool())
-  val dout = Input(UInt(size.W))
-}
-
-abstract  class FIFO_Base(size: Int) extends Module {
-  val io = IO(new Bundle {
-    val enq = new WriterIO(size)
-    val deq = new ReaderIO(size)
-  })
-}
-
-/**
- * A single register (=stage) to build the FIFO.
- */
-class FifoRegister(size: Int) extends FIFO_Base(size) {
-
-
-  val empty :: full :: Nil = Enum(2)
-  val stateReg = RegInit(empty)
-  val dataReg = RegInit(0.U(size.W))
-
-  when(stateReg === empty) {
-    when(io.enq.write) {
-      stateReg := full
-      dataReg := io.enq.din
-    }
-  }.elsewhen(stateReg === full) {
-    when(io.deq.read) {
-      stateReg := empty
-      dataReg := 0.U // just to better see empty slots in the waveform
-    }
-  }.otherwise {
-    // There should not be an otherwise state
-  }
-
-  io.enq.full := (stateReg === full)
-  io.deq.empty := (stateReg === empty)
-  io.deq.dout := dataReg
-}
-/**
- * This is a bubble FIFO.
- */
-class BubbleFifo(size: Int, depth: Int) extends FIFO_Base(size) {
-
-
-  val buffers = Array.fill(depth) { Module(new FifoRegister(size)) }
-  for (i <- 0 until depth - 1) {
-    buffers(i + 1).io.enq.din := buffers(i).io.deq.dout
-    buffers(i + 1).io.enq.write := ~buffers(i).io.deq.empty
-    buffers(i).io.deq.read := ~buffers(i + 1).io.enq.full
-  }
-  io.enq <> buffers(0).io.enq
-  io.deq <> buffers(depth - 1).io.deq
-}
+import chisel3.simulator.ChiselSim
+import chisel3.simulator.HasSimulator
+import chisel3.simulator.stimulus.{ResetProcedure, RunUntilFinished}
+import chisel3.util.Counter
 
 
 
 
+/*
 object mainObj extends App {
-	ChiselStage.emitSystemVerilogFile(new BubbleFifo(8,1), firtoolOpts = Array("-strip-debug-info", "--disable-all-randomization","-default-layer-specialization=enable"))
-	ChiselStage.emitSystemVerilogFile(new CircularFifo (8,4), firtoolOpts = Array("-strip-debug-info", "--disable-all-randomization","-default-layer-specialization=enable"))
-	ChiselStage.emitSystemVerilogFile(new TestModule (4,2,58), firtoolOpts = Array("-strip-debug-info", "--disable-all-randomization","-default-layer-specialization=enable"))
-	ChiselStage.emitSystemVerilogFile(new CircularFIFO_LooseIn_LooseOut (32,20), firtoolOpts = Array("-strip-debug-info", "--disable-all-randomization","-default-layer-specialization=enable"))
+	//ChiselStage.emitSystemVerilogFile(new BubbleFifo(8,1), firtoolOpts = Array("-strip-debug-info", "--disable-all-randomization","-default-layer-specialization=enable"))
+	//ChiselStage.emitSystemVerilogFile(new CircularFifo (8,4), firtoolOpts = Array("-strip-debug-info", "--disable-all-randomization","-default-layer-specialization=enable"))
+	//ChiselStage.emitSystemVerilogFile(new TestModule (4,2,58), firtoolOpts = Array("-strip-debug-info", "--disable-all-randomization","-default-layer-specialization=enable"))
+	//ChiselStage.emitSystemVerilogFile(new CircularFIFO_LooseIn_LooseOut (32,20), firtoolOpts = Array("-strip-debug-info", "--disable-all-randomization","-default-layer-specialization=enable"))
+	//ChiselStage.emitSystemVerilogFile(new CircularFIFO_LooseIn_StrictOut (32,20), firtoolOpts = Array("-strip-debug-info", "--disable-all-randomization","-default-layer-specialization=enable"))
+
+
+	//simulator
+
+}
+*/
+
+object Main extends App with ChiselSim {
+
+  implicit val verilator: HasSimulator = HasSimulator.simulators
+    .verilator(verilatorSettings =
+      svsim.verilator.Backend.CompilationSettings(
+        traceStyle = Some(
+          svsim.verilator.Backend.CompilationSettings.TraceStyle
+            .Vcd(traceUnderscore = true, "trace.vcd")
+        )
+      )
+    )
+
+  simulateRaw((new TestRbuf(32))) { dut =>
+    enableWaves()
+    ResetProcedure.module()(dut)
+    //RunUntilFinished(1000)(dut)
+	var validReadCnt=0
+	var clkCnt=0
+	while(validReadCnt<100 & clkCnt<1000){
+		clkCnt+=1
+		if(dut.io.validRead.peekValue().asBigInt == 1){
+			println("%d : %d".format(clkCnt,dut.io.outForCheck.peekValue().asBigInt))
+			validReadCnt+=1
+		}
+		dut.clock.step()
+	}	
+  }
 }

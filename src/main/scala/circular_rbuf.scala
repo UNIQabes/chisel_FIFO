@@ -101,18 +101,69 @@ disableしたクロック+2 : ready :false din : 受け入れるとは限らな�
 FIFOから読み込む側の仕様
 1, readyがenableされてから2クロック後に有効なデータを出力し始める(1クロックおきにトグルしている場合などは有効なデータを出力しない)
 2, readyがdisableされてからは有効なデータを出力しない(=内部的にはポインタのロールバックが行われる)
+3, readyをdisableしたクロックの次のクロックで、readyをenableしない。その場合の挙動は未定義disableされていることに気づいていなかった時の出力が出てきてしまう
 */
-class CircularFIFO_LooseIn_StrictOut(size: Int, depth: Int) {
+class CircularFIFO_LooseIn_StrictOut(size: Int, depth: Int) extends Module {
 	val io = IO(new Bundle{
 		val in = new ValRed_in(size)
 		val out = new ValRed_out(size)
 	})
+	val in_valid_Reg=RegInit(false.B)
+	val in_ready_Reg=RegInit(false.B)
+	val in_data_Reg=RegInit(0.U(size.W))
 
-	val empty :: full :: mid :: Nil = Enum(3)
-	
-	val buffer=Reg(Vec(depth,UInt(size.W)))
+	val out_valid_Reg=RegInit(false.B)
+	val out_ready_Reg=RegInit(false.B)
+	val out_data_Reg=RegInit(0.U(size.W))
 
-	val outPtr = RegInit(0.U(log2Ceil(depth).W))
-	val inPtr = RegInit(0.U(log2Ceil(depth).W))
+	in_data_Reg:=io.in.data
+	in_valid_Reg:=io.in.valid
+	io.in.ready:=in_ready_Reg
+
+	io.out.data:=out_data_Reg
+	io.out.valid:=out_valid_Reg
+	out_ready_Reg:=io.out.ready
+
+	val buffer=Reg(Vec((depth+1),UInt(size.W)))
+	val outPtr = RegInit(0.U(log2Ceil(depth+1).W))
+	val inPtr = RegInit(0.U(log2Ceil(depth+1).W))
+
+	val prev_outptr=RegInit(0.U(log2Ceil(depth+1).W))
+	val prevprev_outptr=RegInit(0.U(log2Ceil(depth+1).W))
+
+	prevprev_outptr := prev_outptr
+	prev_outptr := outPtr
+
+	val out_ready_prev_Reg=RegInit(false.B)
+	out_ready_prev_Reg := out_ready_Reg
+
+	//in側(FIFOへの書き込み)の処理
+	val restSpaceNum=Wire(UInt(size.W))
+	restSpaceNum := ((prevprev_outptr+depth.U+1.U)-inPtr) % (depth+1).U 
+	in_ready_Reg:= ~(restSpaceNum <= 4.U)
+	val isFull=Wire(Bool())
+	isFull := restSpaceNum===1.U
+	when( isFull & in_valid_Reg){
+		buffer(inPtr):=in_data_Reg
+		inPtr:=(inPtr+1.U)%(depth+1).U
+	}
+
+	//out側(FIFO読み込み)の処理
+	val isEmpty=Wire(Bool())
+	isEmpty:=(outPtr === inPtr)
+	when ( out_ready_prev_Reg & ~out_ready_Reg ){
+		//ロールバックを行う
+		outPtr := prevprev_outptr
+		out_valid_Reg := false.B
+	}
+	.elsewhen( ~isEmpty & out_ready_Reg ){
+		out_valid_Reg := true.B
+		out_data_Reg := buffer(outPtr)
+		outPtr := (outPtr+1.U)%(depth+1).U
+	}
+	.otherwise{
+		out_valid_Reg := false.B
+	}
+
 }
 

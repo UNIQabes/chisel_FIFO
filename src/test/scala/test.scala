@@ -6,7 +6,7 @@ import org.scalatest.matchers.must.Matchers
 
 
 
-class SevenSegment_Spec extends AnyFreeSpec with Matchers with ChiselSim {
+class FIFO_Spec extends AnyFreeSpec with Matchers with ChiselSim {
 	val fifo_1to7StreamTest = { dut : FIFO_Base =>
 			dut.reset.poke(true.B)
 			dut.clock.step()
@@ -114,6 +114,7 @@ class SevenSegment_Spec extends AnyFreeSpec with Matchers with ChiselSim {
 		}
 
 	}
+	
 
 
 
@@ -132,6 +133,16 @@ class SevenSegment_Spec extends AnyFreeSpec with Matchers with ChiselSim {
 				fifo_RandomReadWriteTest.apply(dut)
 				println("Fin")
 			} 
+		}
+	}
+
+	"LooseFIFO" - {
+		"Test" in{
+			simulate(new TestRbuf(32)){dut =>
+				println("rbuf")
+				fifo_RandomReadWriteTest.apply(dut)
+				println("Fin")
+			}
 		}
 	}
 	
