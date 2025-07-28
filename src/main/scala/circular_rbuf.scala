@@ -37,6 +37,7 @@ disableされたクロック+0 : ready :false dout・valid : 有効なデータ�
 disableされたクロック+1 : ready :false dout・valid : 有効なデータを出力
 disableされたクロック+2 : ready :false dout・valid : 有効なデータを出力しない
 */
+
 class CircularFIFO_LooseIn_LooseOut(size: Int, depth: Int) extends Module {
 	val io = IO(new Bundle{
 		val in = new ValRed_in(size)
@@ -64,12 +65,15 @@ class CircularFIFO_LooseIn_LooseOut(size: Int, depth: Int) extends Module {
 	val inPtr = RegInit(0.U(log2Ceil(depth+1).W))
 
 	//in側(FIFOへの書き込み)の処理
-	val restSpaceNum=Wire(UInt(size.W))
-	restSpaceNum := ((outPtr+depth.U+1.U)-inPtr) % (depth+1).U 
+	val curElemNum = Wire(UInt(log2Ceil(depth+1).W)) 
+	curElemNum := ((inPtr+depth.U+1.U)-outPtr) % (depth+1).U 
+	val restSpaceNum = Wire(UInt(log2Ceil(depth+1).W))
+	restSpaceNum := (depth+1).U - curElemNum
+
 	in_ready_Reg:= ~(restSpaceNum <= 4.U)
 	val isFull=Wire(Bool())
 	isFull := restSpaceNum===1.U
-	when( isFull & in_valid_Reg){
+	when( ~isFull & in_valid_Reg){
 		buffer(inPtr):=in_data_Reg
 		inPtr:=(inPtr+1.U)%(depth+1).U
 	}

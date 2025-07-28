@@ -10,17 +10,7 @@ abstract class ReaderOut(size:Int) extends Module{
 }
 
 
-class TestRbuf(size : Int) extends ReaderOut(size){
-	val writer=Module(new LooseWriter(size))
-	val reader=Module(new LooseReader(size))
-	val fifo=Module(new CircularFIFO_LooseIn_LooseOut(size,20))
 
-	writer.io.out <> fifo.io.in
-	fifo.io.out <> reader.io.in
-
-	io.outForCheck := reader.io.outd
-	io.validRead := reader.io.outv
-}
 
 
 
